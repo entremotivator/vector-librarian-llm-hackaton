@@ -1,5 +1,7 @@
 import streamlit as st
 
+from vector_librarian.common import sidebar
+
 
 def app() -> None:
     st.set_page_config(
@@ -10,8 +12,9 @@ def app() -> None:
     )
 
     st.title("📚 Vector Librarian")
-
     st.header("Hello World")
+     
+    sidebar()
 
 
 if __name__ == "__main__":
