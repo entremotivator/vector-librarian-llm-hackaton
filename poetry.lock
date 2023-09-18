@@ -211,6 +211,20 @@ files = [
 cryptography = ">=3.2"
 
 [[package]]
+name = "bibtexparser"
+version = "1.4.0"
+description = "Bibtex parser for python 3"
+category = "main"
+optional = false
+python-versions = "*"
+files = [
+    {file = "bibtexparser-1.4.0.tar.gz", hash = "sha256:ca7ce2bc34e7c48a678dd49416429bb567441f26dbb13b3609082d8cd109ace6"},
+]
+
+[package.dependencies]
+pyparsing = ">=2.0.3"
+
+[[package]]
 name = "blinker"
 version = "1.6.2"
 description = "Fast, simple object-to-object and broadcast signaling"
@@ -1217,6 +1231,21 @@ files = [
 ]
 
 [[package]]
+name = "pyparsing"
+version = "3.1.1"
+description = "pyparsing module - Classes and methods to define and execute parsing grammars"
+category = "main"
+optional = false
+python-versions = ">=3.6.8"
+files = [
+    {file = "pyparsing-3.1.1-py3-none-any.whl", hash = "sha256:32c7c0b711493c72ff18a981d24f28aaf9c1fb7ed5e9667c9e84e3db623bdbfb"},
+    {file = "pyparsing-3.1.1.tar.gz", hash = "sha256:ede28a1a32462f5a9705e07aea48001a08f7cf81a021585011deba701581a0db"},
+]
+
+[package.extras]
+diagrams = ["jinja2", "railroad-diagrams"]
+
+[[package]]
 name = "pypdf"
 version = "3.16.0"
 description = "A pure-python PDF library capable of splitting, merging, cropping, and transforming PDF files"
@@ -1276,6 +1305,28 @@ files = [
 
 [package.dependencies]
 tzdata = {version = "*", markers = "python_version >= \"3.6\""}
+
+[[package]]
+name = "pyzotero"
+version = "1.5.10"
+description = "Python wrapper for the Zotero API"
+category = "main"
+optional = false
+python-versions = ">=3.7"
+files = [
+    {file = "pyzotero-1.5.10-py3-none-any.whl", hash = "sha256:4623360d8e42afac8fec7f5a7a26642b7c479ee4aa8f81b807a1dbb62428817c"},
+    {file = "pyzotero-1.5.10.tar.gz", hash = "sha256:bf5b9a828f39bd4ae209ee0e246f242698b3699b5e9831e82f0833ee67cb3eb2"},
+]
+
+[package.dependencies]
+bibtexparser = "*"
+feedparser = ">=6"
+pytz = "*"
+requests = ">=2.21.0"
+
+[package.extras]
+all = ["pytest (>=6.2.2)"]
+test = ["pytest (>=6.2.2)"]
 
 [[package]]
 name = "referencing"
@@ -2039,4 +2090,4 @@ testing = ["big-O", "jaraco.functools", "jaraco.itertools", "more-itertools", "p
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.10"
-content-hash = "c65d2abb39de94f5352d724b22f403936f1b5b3b1b21e70c47c86873a90e2b5a"
+content-hash = "fc3e4b21240a5f9d7c6caa65def9a78c7d8e80fe7e390cac7e4282ac326abe16"
