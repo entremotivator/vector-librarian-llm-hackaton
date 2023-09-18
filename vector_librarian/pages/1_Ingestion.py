@@ -1,8 +1,8 @@
 import arxiv
 import streamlit as st
 
-from vector_librarian import client
-from vector_librarian.common import sidebar
+import client
+from common import sidebar
 
 
 def arxiv_search_container() -> None:

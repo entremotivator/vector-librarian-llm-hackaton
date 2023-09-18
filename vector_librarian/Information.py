@@ -1,6 +1,6 @@
 import streamlit as st
 
-from vector_librarian.common import sidebar
+from common import sidebar
 
 
 def app() -> None:

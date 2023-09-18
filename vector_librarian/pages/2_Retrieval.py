@@ -1,7 +1,7 @@
 import streamlit as st
 
-from vector_librarian import client
-from vector_librarian.common import sidebar
+import client
+from common import sidebar
 
 
 def retrieval_form_container() -> None:
