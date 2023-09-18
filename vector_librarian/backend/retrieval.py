@@ -5,7 +5,7 @@ from tenacity import retry, stop_after_attempt, wait_random_exponential
 from hamilton.function_modifiers import extract_fields
 from hamilton.htypes import Collect, Parallelizable
 
-from vector_librarian.backend.ingestion import _get_embeddings__openai
+from backend.ingestion import _get_embeddings__openai
 
 
 def all_documents_file_name(weaviate_client: weaviate.Client) -> list[str]:

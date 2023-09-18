@@ -2,7 +2,7 @@
 from hamilton import driver
 from streamlit.runtime.uploaded_file_manager import UploadedFile
 
-from vector_librarian.backend import ingestion, retrieval, vector_db, arxiv_module
+from backend import ingestion, retrieval, vector_db, arxiv_module
 
 
 DRIVER_CONFIG = dict()
