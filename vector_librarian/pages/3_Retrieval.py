@@ -1,10 +1,13 @@
+import json
+
+import pandas as pd
 import streamlit as st
 
 import client
-from common import sidebar
+from authentication import openai_connection_status, weaviate_connection_status
 
 
-def retrieval_form_container() -> None:
+def retrieval_form_container(dr) -> None:
     """Container to enter RAG query and sent /rag_summary GET request"""
     left, right = st.columns(2)
     with left:
@@ -29,8 +32,8 @@ def retrieval_form_container() -> None:
     if form.form_submit_button("Search"):
         with st.status("Running"):
             response = client.rag_summary(
-                weaviate_url=st.session_state.get("WEAVIATE_URL"),
-                weaviate_api_key=st.session_state.get("WEAVIATE_API_KEY"),
+                dr=dr,
+                weaviate_client=st.session_state.get("WEAVIATE_CLIENT"),
                 rag_query=rag_query,
                 hybrid_search_alpha=hybrid_search_alpha,
                 retrieve_top_k=int(retrieve_top_k),
@@ -47,30 +50,65 @@ def history_display_container(history):
     else:
         entry = history[0]
 
+    st.download_button(
+        "Download Q&A History",
+        data=json.dumps(history),
+        file_name="vector-librarian.json",
+        mime="application/json"
+    )
+
     st.subheader("Query")
     st.write(entry["query"])
 
     st.subheader("Response")
     st.write(entry["response"]["rag_summary"])
 
-    with st.expander("Sources"):
-        st.write(entry["response"]["all_chunks"])
+    df = pd.DataFrame(entry["response"]["all_chunks"])
+    df = df.set_index("chunk_id")
+    df = df.rename(columns=dict(
+        score="Relevance",
+        chunk_index="Chunk Index",
+        document_file_name="File name",
+        content="Content",
+        summary="Summary"
+    ))
+
+    st.info("Double-click cell to read full content")
+    st.dataframe(
+        df,
+        hide_index=True,
+        use_container_width=True,
+        column_order=("Relevance", "Chunk Index", "File name", "Content", "Summary"),
+        column_config={col: st.column_config.Column(width="small") 
+                       for col in ("Relevance", "Chunk Index", "File name", "Content", "Summary")
+                      }
+    )
 
 
 def app() -> None:
-    """Streamlit entrypoint for PDF Summarize frontend"""
-    # config
     st.set_page_config(
         page_title="📤 retrieval",
         page_icon="📚",
         layout="centered",
         menu_items={"Get help": None, "Report a bug": None},
     )
-    sidebar()
+
+    with st.sidebar:
+        openai_connection_status()
+        weaviate_connection_status()
 
     st.title("📤 Retrieval")
 
-    retrieval_form_container()
+    if st.session_state.get("OPENAI_STATUS") != ("success", None):
+        st.warning("""
+            You need to provide an OpenAI API key.
+            Visit `Information` to connect.    
+        """)
+        return
+    
+    dr = client.instantiate_driver()
+
+    retrieval_form_container(dr)
 
     if history := st.session_state.get("history"):
         history_display_container(history)
@@ -79,5 +117,4 @@ def app() -> None:
 
 
 if __name__ == "__main__":
-    # run as a script to test streamlit app locally
     app()

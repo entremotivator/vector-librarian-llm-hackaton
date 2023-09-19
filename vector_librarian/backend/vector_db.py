@@ -23,7 +23,13 @@ def full_schema() -> dict:
                 "class": "Document",
                 "description": "content of a PDF file",
                 "vectorIndexType": "hnsw",
-                "vectorizer": "none",
+                "vectorizer": "ref2vec-centroid",
+                "moduleConfig": {
+                    "ref2vec-centroid": {
+                        "referenceProperties": ["containsChunk"],
+                        "method": "mean",
+                    }
+                },
                 "properties": [
                     {
                         "name": "pdf_blob",
@@ -86,18 +92,3 @@ def reset_weaviate_storage(weaviate_client: weaviate.Client) -> bool:
     """Delete all schema and the data stored"""
     weaviate_client.schema.delete_all()
     return True
-
-
-if __name__ == "__main__":
-    import vector_db
-
-    from hamilton import driver
-
-    inputs = dict(
-        weaviate_url="https://my-librarian-xyz2j6s8.weaviate.network",
-        weaviate_api_key="c7VNtl8z16yFSA4FDAExMPW4sWvYNJqPH120",
-    )
-
-    dr = driver.Builder().with_modules(vector_db).build()
-
-    results = dr.execute(final_vars=["initialize_weaviate_instance"], inputs=inputs)

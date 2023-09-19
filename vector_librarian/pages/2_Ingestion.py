@@ -2,7 +2,7 @@ import arxiv
 import streamlit as st
 
 import client
-from common import sidebar
+from authentication import openai_connection_status, weaviate_connection_status
 
 
 def arxiv_search_container() -> None:
@@ -40,7 +40,7 @@ def arxiv_search_container() -> None:
         )
 
 
-def article_selection_container(arxiv_form: dict) -> None:
+def article_selection_container(dr, arxiv_form: dict) -> None:
     """Container to select arxiv search results and send /store_arxiv POST request"""
     results = list(arxiv.Search(**arxiv_form).results())
     form = st.form(key="article_selection_form")
@@ -49,46 +49,52 @@ def article_selection_container(arxiv_form: dict) -> None:
         arxiv_ids = [entry.get_short_id() for entry in selection]
         with st.status("Storing arXiv articles"):
             client.store_arxiv(
-                weaviate_url=st.session_state.get("WEAVIATE_URL"),
-                weaviate_api_key=st.session_state.get("WEAVIATE_API_KEY"),
+                dr=dr,
+                weaviate_client=st.session_state.get("WEAVIATE_CLIENT"),
                 arxiv_ids=arxiv_ids,
             )
 
 
-def pdf_upload_container():
+def pdf_upload_container(dr):
     """Container to uploader arbitrary PDF files and send /store_pdfs POST request"""
     uploaded_files = st.file_uploader("Upload PDF", type=["pdf"], accept_multiple_files=True)
     if st.button("Upload"):
         with st.status("Storing PDFs"):
             client.store_pdfs(
-                weaviate_url=st.session_state.get("WEAVIATE_URL"),
-                weaviate_api_key=st.session_state.get("WEAVIATE_API_KEY"),
+                dr=dr,
+                weaviate_client=st.session_state.get("WEAVIATE_CLIENT"),
                 pdf_files=uploaded_files,
             )
 
 
-def stored_documents_container():
-    """Container showingstored PDF documents, results of /documents GET request"""
-    response = client.all_documents(
-        weaviate_url=st.session_state.get("WEAVIATE_URL"),
-        weaviate_api_key=st.session_state.get("WEAVIATE_API_KEY"),
-    )
-    documents = response["all_documents_file_name"]
-    st.table({"PDF file name": documents})
-
-
 def app() -> None:
-    """Streamlit entrypoint for PDF Summarize frontend"""
-    # config
     st.set_page_config(
         page_title="📥 ingestion",
         page_icon="📚",
         layout="centered",
         menu_items={"Get help": None, "Report a bug": None},
     )
-    sidebar()
+    with st.sidebar:
+        openai_connection_status()
+        weaviate_connection_status()
 
     st.title("📥 Ingestion")
+
+    if st.session_state.get("WEAVIATE_DEFAULT_INSTANCE"):
+        st.warning("""
+            Ingestion is disabled when using the Default Weaviate instance.
+            Visit `Information` to connect to your own instance and ingest new documents.
+        """)
+        return
+    
+    if st.session_state.get("OPENAI_STATUS") !=  ("success", None):
+        st.warning("""
+            You need to provide an OpenAI API key.
+            Visit `Information` to connect.    
+        """)
+        return
+    
+    dr = client.instantiate_driver()
 
     left, right = st.columns(2)
 
@@ -96,16 +102,12 @@ def app() -> None:
         st.subheader("Download from arXiv")
         arxiv_search_container()
         if arxiv_form := st.session_state.get("arxiv_search"):
-            article_selection_container(arxiv_form)
+            article_selection_container(dr, arxiv_form)
 
     with right:
         st.subheader("Upload PDF files")
-        pdf_upload_container()
-
-    st.header("Documents stored in Weaviate")
-    stored_documents_container()
+        pdf_upload_container(dr)
 
 
 if __name__ == "__main__":
-    # run as a script to test streamlit app locally
     app()

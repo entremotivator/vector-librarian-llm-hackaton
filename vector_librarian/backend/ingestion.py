@@ -28,7 +28,7 @@ def pdf_content(pdf_file: str | UploadedFile) -> io.BytesIO:
     if isinstance(pdf_file, str):
         return io.BytesIO(Path(pdf_file).read_bytes())
     elif isinstance(pdf_file, UploadedFile):
-        return io.BytesIO(pdf_file.file.read())
+        return io.BytesIO(pdf_file.read())
     else:
         raise TypeError
 
@@ -40,7 +40,7 @@ def file_name(pdf_file: str | UploadedFile) -> str:
     if isinstance(pdf_file, str):
         file_path = Path(pdf_file)
     elif isinstance(pdf_file, UploadedFile):
-        file_path = Path(pdf_file.filename)
+        file_path = Path(pdf_file.name)
     else:
         raise TypeError
 
@@ -125,7 +125,6 @@ def pdf_embedded(
 def pdf_collection(pdf_embedded: Collect[dict]) -> list[dict]:
     """Collect arxiv objects"""
     return list(pdf_embedded)
-
 
 
 def store_documents(

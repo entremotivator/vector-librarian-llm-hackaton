@@ -8,10 +8,15 @@ from hamilton.htypes import Collect, Parallelizable
 from backend.ingestion import _get_embeddings__openai
 
 
-def all_documents_file_name(weaviate_client: weaviate.Client) -> list[str]:
+def all_documents_file_name(weaviate_client: weaviate.Client) -> list[dict]:
     """Get the `file_name` of all `Document` objects stored in Weaviate"""
-    response = weaviate_client.query.get("Document", ["file_name"]).do()
-    return [d["file_name"] for d in response["data"]["Get"]["Document"]]
+    response = (
+        weaviate_client.query
+        .get("Document", ["file_name"])
+        .with_additional("id")
+        .do()
+    )
+    return response["data"]["Get"]["Document"]
 
 
 def get_document_by_id(weaviate_client: weaviate.Client, document_id: str) -> dict:
@@ -50,7 +55,7 @@ def document_chunk_hybrid_search_result(
                 "chunk_index",
                 "content",
                 "summary",
-                "fromDocument {... on Document {_additional{id}}}",
+                "fromDocument {... on Document {file_name, _additional{id}}}",
             ],
         )
         .with_hybrid(
@@ -70,6 +75,7 @@ def document_chunk_hybrid_search_result(
             dict(
                 document_id=chunk["fromDocument"][0]["_additional"]["id"],
                 chunk_id=chunk["_additional"]["id"],
+                document_file_name=chunk["fromDocument"][0]["file_name"],
                 chunk_index=chunk["chunk_index"],
                 content=chunk["content"],
                 summary=chunk["summary"],
