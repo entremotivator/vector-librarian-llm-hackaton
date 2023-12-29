@@ -168,6 +168,8 @@ def prompt_to_reduce_summaries() -> str:
     Core Argument:
     - Expand on the primary argument related to the medical topic.
     - Highlight key aspects, considerations, or factors influencing the argument.
+    CPT codes:
+    -list posible cpt codes needed
     Evidence:
     - Provide supporting evidence for the core argument.
     - Include relevant studies, data, or factual information.
