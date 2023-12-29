@@ -162,14 +162,14 @@ def prompt_to_reduce_summaries() -> str:
     Additionally, under the 'Predictions' heading, offer insights into potential future developments or trends related to the medical topic. In the 'Suggestions' section, provide practical recommendations or advice based on the information presented in the summary.
     User query: {{query}}
     The summary should be logically organized into bulleted lists under the following medical headings:
-    Medical Summary:
-    - Briefly address the user query.
-    - Summarize the main findings or recommendations.
+    
     Core Argument:
     - Expand on the primary argument related to the medical topic.
     - Highlight key aspects, considerations, or factors influencing the argument.
+    
     CPT codes:
     -list posible cpt codes needed
+    
     Patient Information:
     - Provide a detailed overview of the patient, including demographics, medical history, and relevant background information.
     - Highlight any pertinent lifestyle factors that may influence the patient's health.
