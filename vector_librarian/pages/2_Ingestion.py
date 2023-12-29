@@ -1,12 +1,9 @@
 import arxiv
 import streamlit as st
-
 import client
 from authentication import openai_connection_status, weaviate_connection_status
 
-
 def arxiv_search_container() -> None:
-    """Container to query Arxiv using the Python `arxiv` library"""
     form = st.form(key="arxiv_search_form")
     query = form.text_area(
         "arXiv Search Query",
@@ -39,9 +36,7 @@ def arxiv_search_container() -> None:
             sort_order=sort_order,
         )
 
-
 def article_selection_container(dr, arxiv_form: dict) -> None:
-    """Container to select arxiv search results and send /store_arxiv POST request"""
     results = list(arxiv.Search(**arxiv_form).results())
     form = st.form(key="article_selection_form")
     selection = form.multiselect("Select articles to store", results, format_func=lambda r: r.title)
@@ -54,9 +49,7 @@ def article_selection_container(dr, arxiv_form: dict) -> None:
                 arxiv_ids=arxiv_ids,
             )
 
-
 def pdf_upload_container(dr):
-    """Container to uploader arbitrary PDF files and send /store_pdfs POST request"""
     uploaded_files = st.file_uploader("Upload PDF", type=["pdf"], accept_multiple_files=True)
     if st.button("Upload"):
         with st.status("Storing PDFs"):
@@ -66,6 +59,25 @@ def pdf_upload_container(dr):
                 pdf_files=uploaded_files,
             )
 
+def page_upload_container(dr):
+    uploaded_files = st.file_uploader("Upload Text Files", type=["txt"], accept_multiple_files=True)
+    if st.button("Upload"):
+        with st.status("Storing Pages"):
+            client.store_pages(
+                dr=dr,
+                weaviate_client=st.session_state.get("WEAVIATE_CLIENT"),
+                text_files=uploaded_files,
+            )
+
+def csv_upload_container(dr):
+    uploaded_files = st.file_uploader("Upload CSV Files", type=["csv"], accept_multiple_files=True)
+    if st.button("Upload"):
+        with st.status("Storing CSVs"):
+            client.store_csvs(
+                dr=dr,
+                weaviate_client=st.session_state.get("WEAVIATE_CLIENT"),
+                csv_files=uploaded_files,
+            )
 
 def app() -> None:
     st.set_page_config(
@@ -96,7 +108,7 @@ def app() -> None:
     
     dr = client.instantiate_driver()
 
-    left, right = st.columns(2)
+    left, center, right = st.columns(3)
 
     with left:
         st.subheader("Download from arXiv")
@@ -104,10 +116,15 @@ def app() -> None:
         if arxiv_form := st.session_state.get("arxiv_search"):
             article_selection_container(dr, arxiv_form)
 
-    with right:
+    with center:
         st.subheader("Upload PDF files")
         pdf_upload_container(dr)
 
+    with right:
+        st.subheader("Upload Text Pages")
+        page_upload_container(dr)
+        st.subheader("Upload CSV files")
+        csv_upload_container(dr)
 
 if __name__ == "__main__":
     app()
