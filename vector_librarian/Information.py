@@ -49,14 +49,21 @@ Generate insightful decisions using the power of both retrieval and generative m
 
 Emotive Emoji Enhancements 🌟🎭:
 Express and understand information with a glance! Our application uses emojis to make data more engaging and user-friendly.
+
 🌐 Why AI VA HM?
 
 Unparalleled Accuracy: Trust our intelligent verification system for precise and reliable medical information.
+
 Lightning-Fast Search: Experience instant results with our RAG-powered search capabilities.
+
 Seamless Updates: Keep your database current effortlessly with our dynamic update features.
+
 Intuitive Interaction: Enjoy a hands-free experience with our advanced audio interaction system.
+
 Decision Fun: Make decisions a breeze with the perfect blend of retrieval and generative technologies.
+
 Emotive Experience: Understand and convey information effortlessly with our expressive emoji-enhanced interface.
+
 Join the future of medical data management with AI VA HM! 🚀🌍💙
     """)
 
