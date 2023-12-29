@@ -4,7 +4,6 @@ import streamlit as st
 from authentication import openai_connection_status, weaviate_connection_status
 import client
 # Large Language Model Library
-from langchain.llms import OpenAI
 import docx
 import datetime
 import time
