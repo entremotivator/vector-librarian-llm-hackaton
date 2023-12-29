@@ -1,9 +1,12 @@
 # Framework supporting MLOps Apps
-import streamlit as st 
+import streamlit as st
+
 # Additional Imports
 from authentication import openai_connection_status, weaviate_connection_status
 import client
-# Large Language Model Library
+
+# Large Language Model Library (assuming llm is a language model library)
+from langchain.llms import llm  # Import your language model here
 
 import datetime
 import time
@@ -27,13 +30,12 @@ with st.sidebar:
 st.title("🤖 AIVABOT")
 
 # Check if OpenAI API key is provided
-     if st.session_state.get("OPENAI_STATUS") != ("success", None):
-        st.warning("""
-            You need to provide an OpenAI API key.
-            Visit `Information` to connect.    
-        """)
-        return
-    
+if st.session_state.get("OPENAI_STATUS") != ("success", None):
+    st.warning("""
+        You need to provide an OpenAI API key.
+        Visit `Information` to connect.    
+    """)
+else:
     dr = client.instantiate_driver()
 
     retrieval_form_container(dr)
@@ -42,15 +44,16 @@ st.title("🤖 AIVABOT")
         history_display_container(history)
     else:
         st.session_state["history"] = list()
+
     # Chatbot page
     st.header("🤖 Chatbot")
-    
+
     # User input field
     # Initialize chat history
     if "messages" not in st.session_state:
         st.session_state.messages = []
         st.session_state.messages.append({"role": "🤖", "content": "Hey there! I'm your AIVABOT. How can I assist you today?"})
-    
+
     # Display chat messages from history on app rerun
     for message in st.session_state.messages:
         with st.chat_message(message["role"]):
