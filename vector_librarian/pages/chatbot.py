@@ -1,14 +1,12 @@
 import json
-
 import pandas as pd
 import streamlit as st
 
 import client
 from authentication import openai_connection_status, weaviate_connection_status
 
-
 def retrieval_form_container(dr) -> None:
-    """Container to enter RAG query and sent /rag_summary GET request"""
+    """Container to enter RAG query and send /rag_summary GET request."""
     left, right = st.columns(2)
     with left:
         form = st.form(key="retrieval_query")
@@ -31,15 +29,17 @@ def retrieval_form_container(dr) -> None:
 
     if form.form_submit_button("Search"):
         with st.status("Running"):
-            response = client.rag_summary(
-                dr=dr,
-                weaviate_client=st.session_state.get("WEAVIATE_CLIENT"),
-                rag_query=rag_query,
-                hybrid_search_alpha=hybrid_search_alpha,
-                retrieve_top_k=int(retrieve_top_k),
-            )
-        st.session_state["history"].append(dict(query=rag_query, response=response))
-
+            try:
+                response = client.rag_summary(
+                    dr=dr,
+                    weaviate_client=st.session_state.get("WEAVIATE_CLIENT"),
+                    rag_query=rag_query,
+                    hybrid_search_alpha=hybrid_search_alpha,
+                    retrieve_top_k=int(retrieve_top_k),
+                )
+                st.session_state["history"].append(dict(query=rag_query, response=response))
+            except Exception as e:
+                st.error(f"Error during retrieval: {str(e)}")
 
 def history_display_container(history):
     if len(history) > 1:
@@ -84,7 +84,6 @@ def history_display_container(history):
                       }
     )
 
-
 def app() -> None:
     st.set_page_config(
         page_title="📤 retrieval",
@@ -114,7 +113,6 @@ def app() -> None:
         history_display_container(history)
     else:
         st.session_state["history"] = list()
-
 
 if __name__ == "__main__":
     app()
