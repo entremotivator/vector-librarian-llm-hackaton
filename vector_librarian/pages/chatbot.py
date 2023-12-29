@@ -2,24 +2,24 @@ import json
 import pandas as pd
 import streamlit as st
 
-import chatbot_client
+import client
 from authentication import openai_connection_status, weaviate_connection_status
 
-def chatbot_form_container(dr) -> None:
-    """Container to enter chatbot query and send /chatbot_summary GET request."""
+def retrieval_form_container(dr) -> None:
+    """Container to enter RAG query and send /rag_summary GET request."""
     left, right = st.columns(2)
     with left:
-        form = st.form(key="chatbot_query")
-        chatbot_query = form.text_area(
-            "Chatbot Query", value="What are the symptoms of a common cold?"
+        form = st.form(key="retrieval_query")
+        rag_query = form.text_area(
+            "Retrieval Query", value="What are the main challenges of deploying ML models?"
         )
 
     with right:
-        st.write("Chatbot Search Parameters")
+        st.write("Hybrid Search Parameters")
         retrieve_top_k = st.number_input(
-            "top K", value=3, help="The number of responses to consider for the chatbot"
+            "top K", value=3, help="The number of chunks to consider for response"
         )
-        chatbot_search_alpha = st.slider(
+        hybrid_search_alpha = st.slider(
             "alpha",
             min_value=0.0,
             max_value=1.0,
@@ -27,33 +27,33 @@ def chatbot_form_container(dr) -> None:
             help="0: Keyword. 1: Vector.\n[Weaviate docs](https://weaviate.io/developers/weaviate/api/graphql/search-operators#hybrid)",
         )
 
-    if form.form_submit_button("Chat"):
+    if form.form_submit_button("Search"):
         with st.status("Running"):
             try:
-                response = chatbot_client.chatbot_summary(
+                response = client.rag_summary(
                     dr=dr,
                     weaviate_client=st.session_state.get("WEAVIATE_CLIENT"),
-                    chatbot_query=chatbot_query,
-                    chatbot_search_alpha=chatbot_search_alpha,
+                    rag_query=rag_query,
+                    hybrid_search_alpha=hybrid_search_alpha,
                     retrieve_top_k=int(retrieve_top_k),
                 )
-                st.session_state["chat_history"].append(dict(query=chatbot_query, response=response))
+                st.session_state["history"].append(dict(query=rag_query, response=response))
             except Exception as e:
-                st.error(f"Error during chatbot interaction: {str(e)}")
+                st.error(f"Error during retrieval: {str(e)}")
 
-def chat_history_display_container(chat_history):
-    if len(chat_history) > 1:
-        st.header("Chat History")
-        max_idx = len(chat_history) - 1
+def history_display_container(history):
+    if len(history) > 1:
+        st.header("History")
+        max_idx = len(history) - 1
         history_idx = st.slider("History", 0, max_idx, value=max_idx, label_visibility="collapsed")
-        entry = chat_history[history_idx]
+        entry = history[history_idx]
     else:
-        entry = chat_history[0]
+        entry = history[0]
 
     st.download_button(
-        "Download Chat History",
-        data=json.dumps(chat_history),
-        file_name="chat-history.json",
+        "Download Q&A History",
+        data=json.dumps(history),
+        file_name="vector-librarian.json",
         mime="application/json"
     )
 
@@ -61,13 +61,13 @@ def chat_history_display_container(chat_history):
     st.write(entry["query"])
 
     st.subheader("Response")
-    st.write(entry["response"]["chatbot_summary"])
+    st.write(entry["response"]["rag_summary"])
 
-    df = pd.DataFrame(entry["response"]["all_responses"])
-    df = df.set_index("response_id")
+    df = pd.DataFrame(entry["response"]["all_chunks"])
+    df = df.set_index("chunk_id")
     df = df.rename(columns=dict(
         score="Relevance",
-        response_index="Response Index",
+        chunk_index="Chunk Index",
         document_file_name="File name",
         content="Content",
         summary="Summary"
@@ -78,16 +78,16 @@ def chat_history_display_container(chat_history):
         df,
         hide_index=True,
         use_container_width=True,
-        column_order=("Relevance", "Response Index", "File name", "Content", "Summary"),
+        column_order=("Relevance", "Chunk Index", "File name", "Content", "Summary"),
         column_config={col: st.column_config.Column(width="small") 
-                       for col in ("Relevance", "Response Index", "File name", "Content", "Summary")
+                       for col in ("Relevance", "Chunk Index", "File name", "Content", "Summary")
                       }
     )
 
-def chatbot_app() -> None:
+def app() -> None:
     st.set_page_config(
-        page_title="💬 Chatbot",
-        page_icon="💬",
+        page_title="📤 retrieval",
+        page_icon="📚",
         layout="centered",
         menu_items={"Get help": None, "Report a bug": None},
     )
@@ -96,7 +96,7 @@ def chatbot_app() -> None:
         openai_connection_status()
         weaviate_connection_status()
 
-    st.title("💬 Chatbot")
+    st.title("📤 Retrieval")
 
     if st.session_state.get("OPENAI_STATUS") != ("success", None):
         st.warning("""
@@ -105,14 +105,14 @@ def chatbot_app() -> None:
         """)
         return
     
-    dr = chatbot_client.instantiate_chatbot_driver()
+    dr = client.instantiate_driver()
 
-    chatbot_form_container(dr)
+    retrieval_form_container(dr)
 
-    if chat_history := st.session_state.get("chat_history"):
-        chat_history_display_container(chat_history)
+    if history := st.session_state.get("history"):
+        history_display_container(history)
     else:
-        st.session_state["chat_history"] = list()
+        st.session_state["history"] = list()
 
 if __name__ == "__main__":
-    chatbot_app()
+    app()
