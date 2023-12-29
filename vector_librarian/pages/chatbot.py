@@ -35,43 +35,46 @@ else:
     # OpenAI LLM initialization
     llm = OpenAI(temperature=0.3, openai_api_key=st.session_state.get("OPENAI_KEY"))
 
-    # AIVABOT pages
-    pages = ["Chatbot", "Medical Summary Report Generator", "Weaviate's Memory"]
-    selected_page = st.sidebar.radio("Select Page", pages)
-
-    # Page navigation
-    if selected_page == "Chatbot":
-        # Chatbot page
-        st.header("🤖 Chatbot")
-        
-        # User input field
-        # Initialize chat history
-        if "messages" not in st.session_state:
-            st.session_state.messages = []
-            st.session_state.messages.append({"role": "🤖", "content": "Hey there! I'm your AIVABOT. How can I assist you today?"})
-        
-        # Display chat messages from history on app rerun
-        for message in st.session_state.messages:
-            with st.chat_message(message["role"]):
-                with st.spinner('Starting Bot ...'):
-                    st.markdown(message["content"])
-
-        # Additional chatbot functionalities
-        # ...
+    # Chatbot page
+    st.header("🤖 Chatbot")
     
-    elif selected_page == "Medical Summary Report Generator":
-        # Medical Summary Report Generator page
-        st.header("🩺 Medical Summary Report Generator")
-        
-        # Include the code for Medical Summary Report Generator from the previous example
-        # ...
-        
-    elif selected_page == "Weaviate's Memory":
-        # Weaviate's Memory page
-        st.header("🧠 Weaviate's Memory")
+    # User input field
+    # Initialize chat history
+    if "messages" not in st.session_state:
+        st.session_state.messages = []
+        st.session_state.messages.append({"role": "🤖", "content": "Hey there! I'm your AIVABOT. How can I assist you today?"})
+    
+    # Display chat messages from history on app rerun
+    for message in st.session_state.messages:
+        with st.chat_message(message["role"]):
+            with st.spinner('Starting Bot ...'):
+                st.markdown(message["content"])
 
-        # Include the code for Weaviate's Memory from the provided example
-        # ...
+    # Chatbot functionalities
+    if (prompt := st.text_input("You:", key="chat_input")):
+        # Display user message in chat message container
+        with st.chat_message("🙂"):
+            st.markdown(prompt)
+
+        # Add user message to chat history
+        st.session_state.messages.append({"role": "🙂", "content": prompt})
+
+        # Display assistant response in chat message container
+        with st.chat_message("🤖"):
+            message_placeholder = st.empty()
+            full_response = ""
+            with st.spinner('Wait for it...'):
+                assistant_response = llm(prompt)
+
+            for chunk in assistant_response.split():
+                full_response += chunk + " "
+                time.sleep(0.05)
+                # Add a blinking cursor to simulate typing
+                message_placeholder.markdown(full_response + "▌")
+            message_placeholder.markdown(full_response)
+
+            # Add assistant response to chat history
+            st.session_state.messages.append({"role": "🤖", "content": full_response})
 
 # Additional functionalities (e.g., history, etc.)
 # ...
