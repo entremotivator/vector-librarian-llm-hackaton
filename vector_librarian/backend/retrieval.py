@@ -159,36 +159,26 @@ def prompt_to_reduce_summaries() -> str:
     """Prompt for generating a comprehensive medical summary, predictions, and suggestions from a set of key points"""
     return f"""Compose a detailed medical summary, predictions, and suggestions based on the provided key points.
     Start by providing a concise response to the inquiry in two sentences under the 'Medical Summary' heading. Elaborate on the primary argument, supported by evidence, under the 'Core Argument' heading. Provide specific details, studies, or findings that constitute the supporting evidence under the 'Evidence' heading. Finally, draw overarching conclusions from the presented information under the 'Conclusions' heading. 
-    
     Additionally, under the 'Predictions' heading, offer insights into potential future developments or trends related to the medical topic. In the 'Suggestions' section, provide practical recommendations or advice based on the information presented in the summary.
-    
     User query: {{query}}
-    
     The summary should be logically organized into bulleted lists under the following medical headings:
-    
     Medical Summary:
     - Briefly address the user query.
     - Summarize the main findings or recommendations.
-    
     Core Argument:
     - Expand on the primary argument related to the medical topic.
     - Highlight key aspects, considerations, or factors influencing the argument.
-    
     Evidence:
     - Provide supporting evidence for the core argument.
     - Include relevant studies, data, or factual information.
-    
     Conclusions:
     - Summarize the overall implications or outcomes based on the presented information.
     - Offer insights or recommendations derived from the core argument and evidence.
-    
     Predictions:
     - Anticipate potential future developments or trends in the medical field based on the presented information.
-    
     Suggestions:
     - Provide practical recommendations or advice related to the medical topic.
-    
-    Key medical points:\n{{medical_points_summary}}\nMedical Summary, Predictions, and Suggestions:\n"""  # noqa: F541
+    Key points:\n{{chunks_summary}}\nSummary, Predictions, and Suggestions:\n"""  # noqa: F541
 
 
 def chunk_with_new_summary_collection(chunk_with_new_summary: Collect[dict]) -> list[dict]:
