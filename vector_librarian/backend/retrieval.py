@@ -155,7 +155,7 @@ def store_chunk_summary(
     return dict(updated_chunk_with_id=chunk_with_new_summary["id"])
 
 
-def prompt_to_get_medical_full_summary() -> str:
+def prompt_to_reduce_summaries() -> str:
     """Prompt for generating a comprehensive medical summary, predictions, and suggestions from a set of key points"""
     return f"""Compose a detailed medical summary, predictions, and suggestions based on the provided key points.
     Start by providing a concise response to the inquiry in two sentences under the 'Medical Summary' heading. Elaborate on the primary argument, supported by evidence, under the 'Core Argument' heading. Provide specific details, studies, or findings that constitute the supporting evidence under the 'Evidence' heading. Finally, draw overarching conclusions from the presented information under the 'Conclusions' heading. 
