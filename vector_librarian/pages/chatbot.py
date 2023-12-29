@@ -1,6 +1,6 @@
 # Framework supporting MLOps Apps
 import streamlit as st
-
+from langchain.llms import OpenAI
 # Additional Imports
 from authentication import openai_connection_status, weaviate_connection_status
 import client
