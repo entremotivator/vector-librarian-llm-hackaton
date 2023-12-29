@@ -27,7 +27,7 @@ with st.sidebar:
 st.title("🤖 AIVABOT")
 
 # Check if OpenAI API key is provided
- if st.session_state.get("OPENAI_STATUS") != ("success", None):
+     if st.session_state.get("OPENAI_STATUS") != ("success", None):
         st.warning("""
             You need to provide an OpenAI API key.
             Visit `Information` to connect.    
