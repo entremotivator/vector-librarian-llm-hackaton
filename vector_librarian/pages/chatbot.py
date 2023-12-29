@@ -83,7 +83,7 @@ def app() -> None:
     retrieval_form_container(dr, is_medical_query)
 
     if history := st.session_state.get("history"):
-        history_display_container(history)
+    
     else:
         st.session_state["history"] = list()
 
