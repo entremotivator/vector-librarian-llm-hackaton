@@ -1,5 +1,8 @@
 # Framework supporting MLOps Apps
 import streamlit as st 
+# Additional Imports
+from authentication import openai_connection_status, weaviate_connection_status
+import client
 # Large Language Model Library
 from langchain.llms import OpenAI
 import docx
@@ -7,10 +10,6 @@ import datetime
 import time
 import base64
 import json
-
-# Additional Imports
-from authentication import openai_connection_status, weaviate_connection_status
-import client
 
 # App initialization
 st.set_page_config(
