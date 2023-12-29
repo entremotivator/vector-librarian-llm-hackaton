@@ -16,6 +16,9 @@ streamlit = "^1.26.0"
 weaviate-client = "^3.24.1"
 sf-hamilton = "^1.28.0"
 pyzotero = "^1.5.10"
+langchain= "0.0.210"
+python-docx = "0.8.11"
+openapi-schema-pydantic = "1.2.4"
 
 
 [build-system]
