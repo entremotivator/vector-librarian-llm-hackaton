@@ -10,19 +10,21 @@ def document_selector(dr):
         weaviate_client=st.session_state.get("WEAVIATE_CLIENT")
     )
     documents = response["all_documents_file_name"]
-    return st.selectbox("Select document", documents, format_func=lambda d: d["file_name"])
+    selected_documents = st.multiselect("Select documents", documents, format_func=lambda d: d["file_name"])
+    return selected_documents
 
 
-def pdf_reader(dr, document_id: str) -> None:
-    """Display the PDF as an embedded b64 string in a markdown component"""
-    response = client.get_document_by_id(
-        dr=dr,
-        weaviate_client=st.session_state.get("WEAVIATE_CLIENT"),
-        document_id=document_id,
-    )
-    base64_pdf = response["get_document_by_id"]["pdf_blob"]
-    pdf_str = f'<embed src="data:application/pdf;base64,{base64_pdf}" width=100% height=800 type="application/pdf">'
-    st.markdown(pdf_str, unsafe_allow_html=True)
+def pdf_reader(dr, document_ids: list) -> None:
+    """Display the PDFs as embedded b64 strings in a markdown component"""
+    for document_id in document_ids:
+        response = client.get_document_by_id(
+            dr=dr,
+            weaviate_client=st.session_state.get("WEAVIATE_CLIENT"),
+            document_id=document_id,
+        )
+        base64_pdf = response["get_document_by_id"]["pdf_blob"]
+        pdf_str = f'<embed src="data:application/pdf;base64,{base64_pdf}" width=100% height=800 type="application/pdf">'
+        st.markdown(pdf_str, unsafe_allow_html=True)
 
 
 def app() -> None:
@@ -43,9 +45,9 @@ def app() -> None:
 
     dr = client.instantiate_driver()
 
-    document = document_selector(dr=dr)
-    print(document)
-    pdf_reader(dr=dr, document_id=document["_additional"]["id"])
+    selected_documents = document_selector(dr=dr)
+    print(selected_documents)
+    pdf_reader(dr=dr, document_ids=[doc["_additional"]["id"] for doc in selected_documents])
 
 
 if __name__ == "__main__":
