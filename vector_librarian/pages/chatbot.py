@@ -6,7 +6,7 @@ from authentication import openai_connection_status, weaviate_connection_status
 import client
 
 # Large Language Model Library (assuming llm is a language model library)
-from langchain.llms import llm  # Import your language model here
+ # Import your language model here
 
 import datetime
 import time
