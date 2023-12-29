@@ -42,15 +42,35 @@ else:
     # Page navigation
     if selected_page == "Chatbot":
         # Chatbot page
-        # ... (previous chatbot code)
+        st.header("🤖 Chatbot")
+        
+        # User input field
+        # Initialize chat history
+        if "messages" not in st.session_state:
+            st.session_state.messages = []
+            st.session_state.messages.append({"role": "🤖", "content": "Hey there! I'm your AIVABOT. How can I assist you today?"})
+        
+        # Display chat messages from history on app rerun
+        for message in st.session_state.messages:
+            with st.chat_message(message["role"]):
+                with st.spinner('Starting Bot ...'):
+                    st.markdown(message["content"])
+
+        # Additional chatbot functionalities
+        # ...
+    
     elif selected_page == "Medical Summary Report Generator":
         # Medical Summary Report Generator page
-        # ... (previous medical report code)
+        st.header("🩺 Medical Summary Report Generator")
+        
+        # Include the code for Medical Summary Report Generator from the previous example
+        # ...
+        
     elif selected_page == "Weaviate's Memory":
         # Weaviate's Memory page
         st.header("🧠 Weaviate's Memory")
 
-        # Add Weaviate's memory functionalities here
+        # Include the code for Weaviate's Memory from the provided example
         # ...
 
 # Additional functionalities (e.g., history, etc.)
