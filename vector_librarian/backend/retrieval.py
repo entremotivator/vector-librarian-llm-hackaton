@@ -170,12 +170,37 @@ def prompt_to_reduce_summaries() -> str:
     - Highlight key aspects, considerations, or factors influencing the argument.
     CPT codes:
     -list posible cpt codes needed
-    Evidence:
-    - Provide supporting evidence for the core argument.
-    - Include relevant studies, data, or factual information.
-    Conclusions:
-    - Summarize the overall implications or outcomes based on the presented information.
-    - Offer insights or recommendations derived from the core argument and evidence.
+    Patient Information:
+    - Provide a detailed overview of the patient, including demographics, medical history, and relevant background information.
+    - Highlight any pertinent lifestyle factors that may influence the patient's health.
+
+    Medical History:
+    - Delve into the patient's complete medical history, covering past illnesses, surgeries, and chronic conditions.
+    - Include a thorough exploration of family medical history and any genetic predispositions.
+
+    Current Condition:
+    - Present a detailed analysis of the patient's current health status, focusing on symptoms, vital signs, and subjective complaints.
+    - Discuss any recent changes or developments in the patient's condition.
+
+    Diagnosis:
+    - Offer a precise diagnosis based on clinical assessments, laboratory results, and imaging studies.
+    - Clearly articulate the rationale behind the diagnosis, considering differential diagnoses and ruling out other potential causes.
+
+    Treatment Plan:
+    - Outline a comprehensive treatment plan tailored to the patient's specific condition and needs.
+    - Include information on medication prescriptions, therapeutic interventions, and lifestyle recommendations.
+    - Provide a detailed schedule for follow-up appointments and any necessary monitoring.
+
+    Patient Communication:
+    - Describe how the diagnosis and treatment plan were communicated to the patient, ensuring understanding and addressing any concerns.
+    - Document the patient's response and willingness to comply with the recommended interventions.
+
+    Collaborative Care:
+    - Specify any referrals to specialists or allied healthcare professionals, along with the rationale for collaboration.
+    - Outline a multidisciplinary approach to address the patient's holistic well-being.
+
+    Prognosis:
+    - Discuss the short-term and long-term prognosis, considering the efficacy of the treatment plan and potential complications.
     Predictions:
     - Anticipate potential future developments or trends in the medical field based on the presented information.
     Suggestions:
