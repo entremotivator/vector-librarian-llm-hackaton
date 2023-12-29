@@ -71,3 +71,4 @@ watchdog==3.0.0 ; python_version >= "3.10" and python_version < "4.0" and platfo
 weaviate-client==3.24.1 ; python_version >= "3.10" and python_version < "4.0"
 yarl==1.9.2 ; python_version >= "3.10" and python_version < "4.0"
 zipp==3.16.2 ; python_version >= "3.10" and python_version < "4.0"
+langchain
