@@ -27,12 +27,21 @@ with st.sidebar:
 st.title("🤖 AIVABOT")
 
 # Check if OpenAI API key is provided
-if st.session_state.get("OPENAI_STATUS") != ("success", None):
-    st.warning("You need to provide an OpenAI API key. Visit `Information` to connect.")
-else:
-    # OpenAI LLM initialization
-    llm = OpenAI(temperature=0.3, openai_api_key=st.session_state.get("OPENAI_KEY"))
+ if st.session_state.get("OPENAI_STATUS") != ("success", None):
+        st.warning("""
+            You need to provide an OpenAI API key.
+            Visit `Information` to connect.    
+        """)
+        return
+    
+    dr = client.instantiate_driver()
 
+    retrieval_form_container(dr)
+
+    if history := st.session_state.get("history"):
+        history_display_container(history)
+    else:
+        st.session_state["history"] = list()
     # Chatbot page
     st.header("🤖 Chatbot")
     
