@@ -31,16 +31,22 @@ AI VA HM is not just a medical data application; it's a cutting-edge Retrieval A
 
 Smart Data Verification 🤖🔍:
 Ensure the utmost accuracy and reliability of your medical data with our intelligent verification system.
+
 Instant Search Capability 🚀🔗:
 Swiftly navigate through vast medical datasets using the power of RAG, delivering precise and relevant results instantly.
+
 Dynamic Data Updates 🔄💡:
 Keep your medical vector database up-to-date effortlessly. Our system allows seamless and efficient data updates.
+
 Revolutionary Audio Interaction 🎙️👂:
 Interact with your data like never before! Use voice commands for a hands-free, intuitive experience.
+
 Effortless Note Management 🗒️📈:
 Let AI assist you in creating and managing comprehensive notes and summaries effortlessly.
+
 Decision-Making Made Fun 🤔🎉:
 Generate insightful decisions using the power of both retrieval and generative models, making complex tasks enjoyable.
+
 Emotive Emoji Enhancements 🌟🎭:
 Express and understand information with a glance! Our application uses emojis to make data more engaging and user-friendly.
 🌐 Why AI VA HM?
