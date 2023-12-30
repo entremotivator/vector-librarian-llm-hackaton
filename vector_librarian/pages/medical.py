@@ -55,7 +55,7 @@ def app() -> None:
     st.title("🏥 Medical Journals Explorer")
 
     # Replace 'your_api_key' with your actual RapidAPI key
-    api_key = "678c90fecfmsh3ce9e4abad24c65p1f90f5jsn210c8c654b35"
+    api_key = "c1ea464588msh41b2e1ac29e0f2ep1cd0ffjsn08a7ad695581"
 
     retrieval_form_container(api_key)
 
