@@ -1,5 +1,24 @@
+import json
+import pandas as pd
 import streamlit as st
-from backend import fetch_journal_data
+import requests
+
+def fetch_journal_data(api_key: str, search_query: str = "") -> dict:
+    base_url = "https://medical-articles-live.p.rapidapi.com/journals"
+    url = f"{base_url}?search={search_query}"
+
+    headers = {
+        "X-RapidAPI-Key": api_key,
+        "X-RapidAPI-Host": "medical-articles-live.p.rapidapi.com"
+    }
+
+    response = requests.get(url, headers=headers)
+
+    if response.status_code == 200:
+        return response.json()
+    else:
+        st.error(f"Request failed with status code: {response.status_code}")
+        return {}
 
 def retrieval_form_container(api_key) -> None:
     st.title("🏥 Medical Journals Explorer")
@@ -45,4 +64,3 @@ def app() -> None:
 
 if __name__ == "__main__":
     app()
-
