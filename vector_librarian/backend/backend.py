@@ -1,5 +1,6 @@
 import streamlit as st
 import requests
+from pathlib import Path
 
 def fetch_journal_data(api_key: str, search_query: str = "") -> dict:
     base_url = "https://medical-articles-live.p.rapidapi.com/journals"
@@ -17,6 +18,9 @@ def fetch_journal_data(api_key: str, search_query: str = "") -> dict:
     else:
         st.error(f"Request failed with status code: {response.status_code}")
         return {}
+
+# Replace 'your_api_key' with your actual RapidAPI key
+api_key = "c1ea464588msh41b2e1ac29e0f2ep1cd0ffjsn08a7ad695581"
 
 # Streamlit app
 st.title("Medical Journals Information")
