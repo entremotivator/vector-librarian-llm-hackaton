@@ -77,3 +77,6 @@ openapi-schema-pydantic==1.2.4
 openai
 chromadb
 trulens_eval
+langchain>=0.0.230
+trulens-eval>=0.6.0
+typing-inspect>=0.9.0
