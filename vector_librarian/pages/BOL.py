@@ -1,6 +1,6 @@
 import os
 import streamlit as st
-from openai import OpenAI
+from openai import OpenAIAPI, ChatCompletion
 import chromadb
 from chromadb.utils.embedding_functions import OpenAIEmbeddingFunction
 from trulens_eval import Tru, Feedback, Select
@@ -10,7 +10,7 @@ import numpy as np
 from trulens_eval.tru_custom_app import instrument, TruCustomApp
 
 # Initialize OpenAI client
-oai_client = OpenAI()
+oai_client = OpenAIAPI()
 
 # Retrieve OpenAI API key from Streamlit secrets
 openai_api_key = st.secrets["openai_api_key"]
@@ -123,5 +123,6 @@ with tru_rag as recording:
     rag.query("When was the University of Washington founded?")
 
 # Display leaderboard and dashboard
-tru.get_leaderboard(app_ids=["RAG v1"])
-tru.run_dashboard()
+tru_rag.get_leaderboard(app_ids=["RAG v1"])
+tru_rag.run_dashboard()
+
