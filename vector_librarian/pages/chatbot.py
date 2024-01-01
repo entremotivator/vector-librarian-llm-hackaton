@@ -14,6 +14,7 @@ import numpy as np
 # Import client and authentication modules
 import client
 from authentication import openai_connection_status, weaviate_connection_status, user_auth_openai, user_auth_weaviate, default_auth_weaviate
+from openai_connection_status import OpenAI 
 
 # Initialize OpenAI client
 university_info = """
