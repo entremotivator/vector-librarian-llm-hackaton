@@ -74,7 +74,7 @@ zipp==3.16.2 ; python_version >= "3.10" and python_version < "4.0"
 python-docx==0.8.11
 openapi-schema-pydantic==1.2.4
 langchain
-trulens_eval
+trulens-eval==0.20.0
 chromadb
 
 
