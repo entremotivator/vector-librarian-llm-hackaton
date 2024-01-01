@@ -1,11 +1,8 @@
-import os
 import json
 import pandas as pd
 import streamlit as st
-import client
-from authentication import openai_connection_status, weaviate_connection_status, user_auth_openai, user_auth_weaviate, default_auth_weaviate
-from openai_connection_status import Chromadb 
-
+from openai import OpenAI
+import chromadb
 from chromadb.utils.embedding_functions import OpenAIEmbeddingFunction
 from trulens_eval import Tru, Feedback, Select, Groundedness, TruCustomApp
 from langchain.vectorstores.weaviate import Weaviate
@@ -17,7 +14,6 @@ import numpy as np
 # Import client and authentication modules
 import client
 from authentication import openai_connection_status, weaviate_connection_status, user_auth_openai, user_auth_weaviate, default_auth_weaviate
-from openai_connection_status import Chromadb 
 
 # Initialize OpenAI client
 university_info = """
@@ -27,14 +23,14 @@ As the flagship institution of the six public universities in Washington state,
 UW encompasses over 500 buildings and 20 million square feet of space,
 including one of the largest library systems in the world.
 """
-oai_client = openai_connection_status()
+oai_client = OpenAI()
 oai_client.embeddings.create(
     model="text-embedding-ada-002",
     input=university_info
 )
 
 # Initialize ChromaDB
-embedding_function = OpenAIEmbeddingFunction(api_key=os.environ.get('openai_connection_status'),
+embedding_function = OpenAIEmbeddingFunction(api_key="your_openai_api_key",  # Replace with your OpenAI API key
                                              model_name="text-embedding-ada-002")
 
 chroma_client = chromadb.Client()
@@ -88,7 +84,7 @@ class RAG_from_scratch:
 rag = RAG_from_scratch()
 
 # Initialize TruLens Feedbacks
-fopenai = Feedback.Provider.OpenAI(api_key=os.environ.get('openai_connection_status'))
+fopenai = Feedback.Provider.OpenAI(api_key="your_openai_api_key")  # Replace with your OpenAI API key
 grounded = Groundedness(groundedness_provider=fopenai)
 
 f_groundedness = (
@@ -181,7 +177,7 @@ def weaviate_chat_app() -> None:
     client_weaviate = weaviate.Client("http://localhost:8080")
     vectorstore_weaviate = Weaviate(client_weaviate, "PodClip", "content")
 
-    openai_weaviate = OpenAI(temperature=0.2, openai_api_key=os.environ.get('openai_connection_status'))
+    openai_weaviate = OpenAI(temperature=0.2, openai_api_key="your_openai_api_key")  # Replace with your OpenAI API key
     qa_weaviate = ChatVectorDBChain.from_llm(openai_weaviate, vectorstore_weaviate)
 
     chat_history_weaviate = []
