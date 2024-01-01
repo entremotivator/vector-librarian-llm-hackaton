@@ -24,14 +24,14 @@ As the flagship institution of the six public universities in Washington state,
 UW encompasses over 500 buildings and 20 million square feet of space,
 including one of the largest library systems in the world.
 """
-oai_client = OpenAI()
+oai_client = openai_connection_status()
 oai_client.embeddings.create(
     model="text-embedding-ada-002",
     input=university_info
 )
 
 # Initialize ChromaDB
-embedding_function = OpenAIEmbeddingFunction(api_key=os.environ.get('OPENAI_API_KEY'),
+embedding_function = OpenAIEmbeddingFunction(api_key=os.environ.get('openai_connection_status'),
                                              model_name="text-embedding-ada-002")
 
 chroma_client = chromadb.Client()
@@ -85,7 +85,7 @@ class RAG_from_scratch:
 rag = RAG_from_scratch()
 
 # Initialize TruLens Feedbacks
-fopenai = Feedback.Provider.OpenAI(api_key=os.environ.get('OPENAI_API_KEY'))
+fopenai = Feedback.Provider.OpenAI(api_key=os.environ.get('openai_connection_status'))
 grounded = Groundedness(groundedness_provider=fopenai)
 
 f_groundedness = (
@@ -178,7 +178,7 @@ def weaviate_chat_app() -> None:
     client_weaviate = weaviate.Client("http://localhost:8080")
     vectorstore_weaviate = Weaviate(client_weaviate, "PodClip", "content")
 
-    openai_weaviate = OpenAI(temperature=0.2, openai_api_key=os.environ.get('OPENAI_API_KEY'))
+    openai_weaviate = OpenAI(temperature=0.2, openai_api_key=os.environ.get('openai_connection_status'))
     qa_weaviate = ChatVectorDBChain.from_llm(openai_weaviate, vectorstore_weaviate)
 
     chat_history_weaviate = []
