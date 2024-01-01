@@ -2,7 +2,7 @@ import openai
 import json
 import pandas as pd
 import streamlit as st
-from trulens import trulens-eval  # Import TruLens library
+from trulens import trulens  # Import TruLens library
 
 import client
 from authentication import openai_connection_status, weaviate_connection_status
