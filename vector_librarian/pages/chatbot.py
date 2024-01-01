@@ -33,9 +33,11 @@ oai_client.embeddings.create(
     input=university_info
 )
 
-# OpenAIEmbeddingFunction setup
-embedding_function = OpenAIEmbeddingFunction(api_key=os.environ.get('OPENAI_API_KEY'),
-                                             model_name="text-embedding-ada-002")
+# OpenAIEmbeddingFunction setup with st.secrets
+embedding_function = OpenAIEmbeddingFunction(
+    api_key=st.secrets["openai"]["api_key"],
+    model_name="text-embedding-ada-002"
+)
 
 # ChromaDB setup
 chroma_client = chromadb.Client()
