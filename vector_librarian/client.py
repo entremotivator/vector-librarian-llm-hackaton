@@ -87,6 +87,12 @@ def all_documents(dr: driver.Driver, weaviate_client: weaviate.Client):
         overrides=dict(weaviate_client=weaviate_client)
     )
 
+def chatbot_interaction(dr: driver.Driver, user_input: str):
+    """Interact with the chatbot using Hamilton"""
+    return dr.execute(
+        ["chatbot_interaction"],
+        inputs=dict(user_input=user_input),
+    )
 
 def get_document_by_id(dr: driver.Driver, weaviate_client: weaviate.Client, document_id: str):
     """Retrieve a document stored in Weaviate based on its id"""
