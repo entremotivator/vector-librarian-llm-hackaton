@@ -1,52 +1,52 @@
 import json
 import pandas as pd
 import streamlit as st
-from trulens import Trulens  # Import Trulens
+from trulens import Trulens
 
 import client
 from authentication import openai_connection_status, weaviate_connection_status
 
-def add_trulens():
+# Constants
+DEFAULT_RAG_QUERY = "What are the main challenges of deploying ML models?"
+DEFAULT_TOP_K = 3
+DEFAULT_ALPHA = 0.75
+
+def add_trulens_to_sidebar():
     st.sidebar.title("🔍 Trulens")
     trulens_expander = st.sidebar.expander("Trulens Configuration")
 
     with trulens_expander:
         st.write("Configure Trulens settings here.")
 
-def retrieval_form_container(dr) -> None:
-    """Container to enter RAG query and send /rag_summary GET request"""
-    left, right = st.columns(2)
-    with left:
-        form = st.form(key="retrieval_query")
-        rag_query = form.text_area(
-            "Retrieval Query", value="What are the main challenges of deploying ML models?"
-        )
+def get_rag_query_form():
+    form = st.form(key="retrieval_query")
+    rag_query = form.text_area("Retrieval Query", value=DEFAULT_RAG_QUERY)
+    return form, rag_query
 
-    with right:
-        st.write("Hybrid Search Parameters")
-        retrieve_top_k = st.number_input(
-            "top K", value=3, help="The number of chunks to consider for response"
-        )
-        hybrid_search_alpha = st.slider(
-            "alpha",
-            min_value=0.0,
-            max_value=1.0,
-            value=0.75,
-            help="0: Keyword. 1: Vector.\n[Weaviate docs](https://weaviate.io/developers/weaviate/api/graphql/search-operators#hybrid)",
-        )
+def get_hybrid_search_parameters():
+    st.write("Hybrid Search Parameters")
+    retrieve_top_k = st.number_input("top K", value=DEFAULT_TOP_K, help="The number of chunks to consider for response")
+    hybrid_search_alpha = st.slider(
+        "alpha",
+        min_value=0.0,
+        max_value=1.0,
+        value=DEFAULT_ALPHA,
+        help="0: Keyword. 1: Vector.\n[Weaviate docs](https://weaviate.io/developers/weaviate/api/graphql/search-operators#hybrid)",
+    )
+    return int(retrieve_top_k), hybrid_search_alpha
 
-    if form.form_submit_button("Search"):
-        with st.status("Running"):
-            response = client.rag_summary(
-                dr=dr,
-                weaviate_client=st.session_state.get("WEAVIATE_CLIENT"),
-                rag_query=rag_query,
-                hybrid_search_alpha=hybrid_search_alpha,
-                retrieve_top_k=int(retrieve_top_k),
-            )
-        st.session_state["history"].append(dict(query=rag_query, response=response))
+def run_search(dr, rag_query, retrieve_top_k, hybrid_search_alpha):
+    with st.status("Running"):
+        response = client.rag_summary(
+            dr=dr,
+            weaviate_client=st.session_state.get("WEAVIATE_CLIENT"),
+            rag_query=rag_query,
+            hybrid_search_alpha=hybrid_search_alpha,
+            retrieve_top_k=retrieve_top_k,
+        )
+    st.session_state["history"].append(dict(query=rag_query, response=response))
 
-def history_display_container(history):
+def display_history(history):
     if len(history) > 1:
         st.header("History")
         max_idx = len(history) - 1
@@ -100,7 +100,7 @@ def app() -> None:
     with st.sidebar:
         openai_connection_status()
         weaviate_connection_status()
-        add_trulens()  # Add Trulens to the sidebar
+        add_trulens_to_sidebar()
 
     st.title("📤 Retrieval")
 
@@ -113,12 +113,14 @@ def app() -> None:
     
     dr = client.instantiate_driver()
 
-    retrieval_form_container(dr)
+    form, rag_query = get_rag_query_form()
+    retrieve_top_k, hybrid_search_alpha = get_hybrid_search_parameters()
 
-    if history := st.session_state.get("history"):
-        history_display_container(history)
-    else:
-        st.session_state["history"] = list()
+    if form.form_submit_button("Search"):
+        run_search(dr, rag_query, retrieve_top_k, hybrid_search_alpha)
+
+    history = st.session_state.get("history", [])
+    display_history(history)
 
 if __name__ == "__main__":
     app()
