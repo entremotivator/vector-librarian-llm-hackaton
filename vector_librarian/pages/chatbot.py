@@ -2,7 +2,10 @@ import os
 import json
 import pandas as pd
 import streamlit as st
-import chromadb
+import client
+from authentication import openai_connection_status, weaviate_connection_status, user_auth_openai, user_auth_weaviate, default_auth_weaviate
+from openai_connection_status import Chromadb 
+
 from chromadb.utils.embedding_functions import OpenAIEmbeddingFunction
 from trulens_eval import Tru, Feedback, Select, Groundedness, TruCustomApp
 from langchain.vectorstores.weaviate import Weaviate
@@ -14,7 +17,7 @@ import numpy as np
 # Import client and authentication modules
 import client
 from authentication import openai_connection_status, weaviate_connection_status, user_auth_openai, user_auth_weaviate, default_auth_weaviate
-from openai_connection_status import OpenAI 
+from openai_connection_status import Chromadb 
 
 # Initialize OpenAI client
 university_info = """
