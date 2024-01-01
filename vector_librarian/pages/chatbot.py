@@ -1,119 +1,95 @@
 import json
 import pandas as pd
 import streamlit as st
-from openai import OpenAI
-import chromadb
-from chromadb.utils.embedding_functions import OpenAIEmbeddingFunction
-from trulens_eval import Tru, Feedback, Select, Groundedness, TruCustomApp
-from langchain.vectorstores.weaviate import Weaviate
-from langchain.llms import OpenAI
-from langchain.chains import ChatVectorDBChain
-import weaviate
-import numpy as np
+from trulens import Trulens  # Import Trulens
 
-# Import client and authentication modules
 import client
-from authentication import openai_connection_status, weaviate_connection_status, user_auth_openai, user_auth_weaviate, default_auth_weaviate
+from authentication import openai_connection_status, weaviate_connection_status
 
-# Initialize OpenAI client
-university_info = """
-The University of Washington, founded in 1861 in Seattle, is a public research university
-with over 45,000 students across three campuses in Seattle, Tacoma, and Bothell.
-As the flagship institution of the six public universities in Washington state,
-UW encompasses over 500 buildings and 20 million square feet of space,
-including one of the largest library systems in the world.
-"""
-oai_client = OpenAI()
-oai_client.embeddings.create(
-    model="text-embedding-ada-002",
-    input=university_info
-)
+def add_trulens():
+    st.sidebar.title("🔍 Trulens")
+    trulens_expander = st.sidebar.expander("Trulens Configuration")
 
-# Initialize ChromaDB
-embedding_function = OpenAIEmbeddingFunction(api_key="your_openai_api_key",  # Replace with your OpenAI API key
-                                             model_name="text-embedding-ada-002")
+    with trulens_expander:
+        st.write("Configure Trulens settings here.")
 
-chroma_client = chromadb.Client()
-vector_store = chroma_client.get_or_create_collection(name="Universities",
-                                                      embedding_function=embedding_function)
-
-vector_store.add("uni_info", documents=university_info)
-
-# Initialize TruLens
-tru = Tru()
-
-class RAG_from_scratch:
-    @instrument
-    def retrieve(self, query: str) -> list:
-        """
-        Retrieve relevant text from vector store.
-        """
-        results = vector_store.query(
-            query_texts=query,
-            n_results=2
+def retrieval_form_container(dr) -> None:
+    """Container to enter RAG query and send /rag_summary GET request"""
+    left, right = st.columns(2)
+    with left:
+        form = st.form(key="retrieval_query")
+        rag_query = form.text_area(
+            "Retrieval Query", value="What are the main challenges of deploying ML models?"
         )
-        return results['documents'][0]
 
-    @instrument
-    def generate_completion(self, query: str, context_str: list) -> str:
-        """
-        Generate answer from context.
-        """
-        completion = oai_client.chat.completions.create(
-            model="gpt-3.5-turbo",
-            temperature=0,
-            messages=[
-                {"role": "user",
-                 "content":
-                     f"We have provided context information below. \n"
-                     f"---------------------\n"
-                     f"{context_str}"
-                     f"\n---------------------\n"
-                     f"Given this information, please answer the question: {query}"
-                 }
-            ]
-        ).choices[0].message.content
-        return completion
+    with right:
+        st.write("Hybrid Search Parameters")
+        retrieve_top_k = st.number_input(
+            "top K", value=3, help="The number of chunks to consider for response"
+        )
+        hybrid_search_alpha = st.slider(
+            "alpha",
+            min_value=0.0,
+            max_value=1.0,
+            value=0.75,
+            help="0: Keyword. 1: Vector.\n[Weaviate docs](https://weaviate.io/developers/weaviate/api/graphql/search-operators#hybrid)",
+        )
 
-    @instrument
-    def query(self, query: str) -> str:
-        context_str = self.retrieve(query)
-        completion = self.generate_completion(query, context_str)
-        return completion
+    if form.form_submit_button("Search"):
+        with st.status("Running"):
+            response = client.rag_summary(
+                dr=dr,
+                weaviate_client=st.session_state.get("WEAVIATE_CLIENT"),
+                rag_query=rag_query,
+                hybrid_search_alpha=hybrid_search_alpha,
+                retrieve_top_k=int(retrieve_top_k),
+            )
+        st.session_state["history"].append(dict(query=rag_query, response=response))
 
-rag = RAG_from_scratch()
+def history_display_container(history):
+    if len(history) > 1:
+        st.header("History")
+        max_idx = len(history) - 1
+        history_idx = st.slider("History", 0, max_idx, value=max_idx, label_visibility="collapsed")
+        entry = history[history_idx]
+    else:
+        entry = history[0]
 
-# Initialize TruLens Feedbacks
-fopenai = Feedback.Provider.OpenAI(api_key="your_openai_api_key")  # Replace with your OpenAI API key
-grounded = Groundedness(groundedness_provider=fopenai)
+    st.download_button(
+        "Download Q&A History",
+        data=json.dumps(history),
+        file_name="vector-librarian.json",
+        mime="application/json"
+    )
 
-f_groundedness = (
-    Feedback(grounded.groundedness_measure_with_cot_reasons, name="Groundedness")
-    .on(Select.RecordCalls.retrieve.rets.collect())
-    .on_output()
-    .aggregate(grounded.grounded_statements_aggregator)
-)
+    st.subheader("Query")
+    st.write(entry["query"])
 
-f_qa_relevance = (
-    Feedback(fopenai.relevance_with_cot_reasons, name="Answer Relevance")
-    .on(Select.RecordCalls.retrieve.args.query)
-    .on_output()
-)
+    st.subheader("Response")
+    st.write(entry["response"]["rag_summary"])
 
-f_context_relevance = (
-    Feedback(fopenai.qs_relevance_with_cot_reasons, name="Context Relevance")
-    .on(Select.RecordCalls.retrieve.args.query)
-    .on(Select.RecordCalls.retrieve.rets.collect())
-    .aggregate(np.mean)
-)
+    df = pd.DataFrame(entry["response"]["all_chunks"])
+    df = df.set_index("chunk_id")
+    df = df.rename(columns=dict(
+        score="Relevance",
+        chunk_index="Chunk Index",
+        document_file_name="File name",
+        content="Content",
+        summary="Summary"
+    ))
 
-# Initialize TruLens Custom App
-tru_rag = TruCustomApp(rag,
-                       app_id='RAG v1',
-                       feedbacks=[f_groundedness, f_qa_relevance, f_context_relevance])
+    st.info("Double-click cell to read full content")
+    st.dataframe(
+        df,
+        hide_index=True,
+        use_container_width=True,
+        column_order=("Relevance", "Chunk Index", "File name", "Content", "Summary"),
+        column_config={col: st.column_config.Column(width="small") 
+                       for col in ("Relevance", "Chunk Index", "File name", "Content", "Summary")
+                      }
+    )
 
-# Streamlit App
-def streamlit_app() -> None:
+def app() -> None:
     st.set_page_config(
         page_title="📤 retrieval",
         page_icon="📚",
@@ -124,9 +100,7 @@ def streamlit_app() -> None:
     with st.sidebar:
         openai_connection_status()
         weaviate_connection_status()
-        user_auth_openai()
-        user_auth_weaviate()
-        default_auth_weaviate()
+        add_trulens()  # Add Trulens to the sidebar
 
     st.title("📤 Retrieval")
 
@@ -136,14 +110,7 @@ def streamlit_app() -> None:
             Visit `Information` to connect.    
         """)
         return
-
-    if st.session_state.get("WEAVIATE_STATUS") != ("success", None):
-        st.warning("""
-            You need to connect to Weaviate.
-            Visit `Information` to connect.    
-        """)
-        return
-
+    
     dr = client.instantiate_driver()
 
     retrieval_form_container(dr)
@@ -153,50 +120,5 @@ def streamlit_app() -> None:
     else:
         st.session_state["history"] = list()
 
-    # Example question
-    user_question = st.text_input("Ask a question:")
-    if st.button("Get Answer"):
-        with tru_rag as recording:
-            rag.query(user_question)
-
-    # Display the TruLens Leaderboard
-    leaderboard_button = st.button("Show Leaderboard")
-    if leaderboard_button:
-        tru.get_leaderboard(app_ids=["RAG v1"])
-
-    # Display the TruLens Dashboard
-    dashboard_button = st.button("Show Dashboard")
-    if dashboard_button:
-        tru.run_dashboard()
-
-# New Page for Weaviate ChatVectorDBChain
-def weaviate_chat_app() -> None:
-    st.title("Weaviate ChatVectorDBChain Demo")
-    st.write("Please enter a question or dialogue to get started!")
-
-    client_weaviate = weaviate.Client("http://localhost:8080")
-    vectorstore_weaviate = Weaviate(client_weaviate, "PodClip", "content")
-
-    openai_weaviate = OpenAI(temperature=0.2, openai_api_key="your_openai_api_key")  # Replace with your OpenAI API key
-    qa_weaviate = ChatVectorDBChain.from_llm(openai_weaviate, vectorstore_weaviate)
-
-    chat_history_weaviate = []
-
-    while True:
-        query_weaviate = st.text_input("Enter a question:")
-        if st.button("Get Answer"):
-            result_weaviate = qa_weaviate({"question": query_weaviate, "chat_history": chat_history_weaviate})
-            st.write(f"Answer: {result_weaviate['answer']}")
-            chat_history_weaviate = [(query_weaviate, result_weaviate['answer'])]
-
-# Create the Streamlit app with multiple pages
-app_pages = {
-    "Retrieval": streamlit_app,
-    "Weaviate Chat": weaviate_chat_app,
-}
-
-# Page selection
-selected_page = st.sidebar.selectbox("Select a page", list(app_pages.keys()))
-
-# Run the selected app page
-app_pages[selected_page]()
+if __name__ == "__main__":
+    app()
