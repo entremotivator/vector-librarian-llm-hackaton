@@ -44,7 +44,43 @@ vector_store.add("uni_info", documents=university_info)
 tru = Tru()
 
 class RAG_from_scratch:
-    # ... (the rest of the RAG_from_scratch class)
+    @instrument
+    def retrieve(self, query: str) -> list:
+        """
+        Retrieve relevant text from vector store.
+        """
+        results = vector_store.query(
+            query_texts=query,
+            n_results=2
+        )
+        return results['documents'][0]
+
+    @instrument
+    def generate_completion(self, query: str, context_str: list) -> str:
+        """
+        Generate answer from context.
+        """
+        completion = oai_client.chat.completions.create(
+            model="gpt-3.5-turbo",
+            temperature=0,
+            messages=[
+                {"role": "user",
+                 "content":
+                     f"We have provided context information below. \n"
+                     f"---------------------\n"
+                     f"{context_str}"
+                     f"\n---------------------\n"
+                     f"Given this information, please answer the question: {query}"
+                 }
+            ]
+        ).choices[0].message.content
+        return completion
+
+    @instrument
+    def query(self, query: str) -> str:
+        context_str = self.retrieve(query)
+        completion = self.generate_completion(query, context_str)
+        return completion
 
 rag = RAG_from_scratch()
 
