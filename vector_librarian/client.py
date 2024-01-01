@@ -88,11 +88,14 @@ def all_documents(dr: driver.Driver, weaviate_client: weaviate.Client):
     )
 
 def chatbot_interaction(dr: driver.Driver, user_input: str):
-    """Interact with the chatbot using Hamilton"""
-    return dr.execute(
-        ["chatbot_interaction"],
-        inputs=dict(user_input=user_input),
-    )
+    """Interact with the chatbot using Hamilton (placeholder)"""
+    # Replace this with your actual chatbot logic
+    if "hello" in user_input.lower():
+        response = "Hi there! How can I help you today?"
+    else:
+        response = "I'm sorry, I didn't understand that. Can you please rephrase?"
+
+    return response
 
 def get_document_by_id(dr: driver.Driver, weaviate_client: weaviate.Client, document_id: str):
     """Retrieve a document stored in Weaviate based on its id"""
