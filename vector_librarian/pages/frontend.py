@@ -1,65 +1,84 @@
-import json
 import streamlit as st
-import requests
+from pymed import PubMed
 
-def fetch_journal_data(api_key: str, search_query: str = "") -> dict:
-    base_url = "https://medical-articles-live.p.rapidapi.com/journals"
-    url = f"{base_url}?search={search_query}"
+import client
+from authentication import openai_connection_status, weaviate_connection_status
 
-    headers = {
-        "X-RapidAPI-Key": api_key,
-        "X-RapidAPI-Host": "medical-articles-live.p.rapidapi.com"
-    }
+def pubmed_search_container() -> None:
+    """Container to query PubMed using the pymed library"""
+    form = st.form(key="pubmed_search_form")
+    query = form.text_area(
+        "PubMed Search Query",
+        value="LLM in production",
+        help="[See docs](https://github.com/gijswobben/pymed)",
+    )
 
-    response = requests.get(url, headers=headers)
+    with st.expander("PubMed Search Parameters"):
+        max_results = st.number_input("Max results", value=5)
 
-    if response.status_code == 200:
-        return response.json()
-    else:
-        st.error(f"Request failed with status code: {response.status_code}")
-        return {}
+    if form.form_submit_button("Search"):
+        st.session_state["pubmed_search"] = dict(
+            query=query,
+            max_results=max_results,
+        )
 
-def retrieval_form_container(api_key) -> None:
-    st.title("🏥 Medical Journals Explorer")
-
-    left, right = st.columns(2)
-    with left:
-        form = st.form(key="journal_search_query")
-        search_query = form.text_input("Enter search query for medical journals:", "")
-
-    with right:
-        st.write("Search Parameters")
-        search_button = form.form_submit_button("Search")
-
-    if search_button:
-        with st.spinner("Searching..."):
-            journal_data = fetch_journal_data(api_key, search_query)
-            st.session_state["journal_data"] = journal_data
-
-def display_journal_data(journal_data):
-    if journal_data:
-        st.write("Information about Medical Journals:")
-        st.json(journal_data)
-    else:
-        st.warning("No data available. Please try another search.")
+def article_selection_container(dr, pubmed_form: dict) -> None:
+    """Container to select PubMed search results and send /store_pubmed POST request"""
+    pubmed = PubMed(tool="MyTool", email="my@email.com")
+    results = pubmed.query(pubmed_form['query'], max_results=pubmed_form['max_results'])
+    
+    form = st.form(key="article_selection_form")
+    selection = form.multiselect("Select articles to store", results, format_func=lambda r: r.title)
+    
+    if form.form_submit_button("Store"):
+        pubmed_ids = [entry.pubmed_id for entry in selection]
+        with st.status("Storing PubMed articles"):
+            client.store_pubmed(
+                dr=dr,
+                weaviate_client=st.session_state.get("WEAVIATE_CLIENT"),
+                pubmed_ids=pubmed_ids,
+            )
 
 def app() -> None:
     st.set_page_config(
-        page_title="🏥 Medical Journals Explorer",
+        page_title="📥 ingestion",
         page_icon="📚",
         layout="centered",
         menu_items={"Get help": None, "Report a bug": None},
     )
+    with st.sidebar:
+        openai_connection_status()
+        weaviate_connection_status()
 
-    st.title("🏥 Medical Journals Explorer")
+    st.title("📥 Ingestion")
 
-    # Replace 'your_api_key' with your actual RapidAPI key
-    api_key = "c1ea464588msh41b2e1ac29e0f2ep1cd0ffjsn08a7ad695581"
+    if st.session_state.get("WEAVIATE_DEFAULT_INSTANCE"):
+        st.warning("""
+            Ingestion is disabled when using the Default Weaviate instance.
+            Visit `Information` to connect to your own instance and ingest new documents.
+        """)
+        return
+    
+    if st.session_state.get("OPENAI_STATUS") !=  ("success", None):
+        st.warning("""
+            You need to provide an OpenAI API key.
+            Visit `Information` to connect.    
+        """)
+        return
+    
+    dr = client.instantiate_driver()
 
-    retrieval_form_container(api_key)
+    left, right = st.columns(2)
 
-    journal_data = st.session_state.get("journal_data", {})
-    display_journal_data(journal_data)
+    with left:
+        st.subheader("Download from PubMed")
+        pubmed_search_container()
+        if pubmed_form := st.session_state.get("pubmed_search"):
+            article_selection_container(dr, pubmed_form)
+
+    with right:
+        st.subheader("Upload PDF files")
+        pdf_upload_container(dr)
 
 if __name__ == "__main__":
     app()
