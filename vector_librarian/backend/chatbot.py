@@ -1,5 +1,5 @@
-import weaviate
 import openai
+import weaviate
 from tenacity import retry, stop_after_attempt, wait_random_exponential
 from hamilton.function_modifiers import extract_fields
 from hamilton.htypes import Collect, Parallelizable
@@ -72,5 +72,17 @@ def rag_summary(
     all_chunks: list[dict],
     prompt_to_reduce_summaries: str,
     summarize_model_name: str,
+    pdf_content: bytes = None,
 ) -> str:
-    # Existing implementation remains unchanged
+    """Concatenate the list of chunk summaries into a single text, fill the prompt template,
+    and use OpenAI to reduce the content into a single summary;
+    """
+    if pdf_content:
+        # Process PDF content here
+        pass
+
+    concatenated_summaries = " ".join(chunk["summary"] for chunk in all_chunks)
+    filled_prompt = prompt_to_reduce_summaries.format(
+        query=rag_query, chunks_summary=concatenated_summaries
+    )
+    return _summarize_text__openai(filled_prompt, summarize_model_name)
