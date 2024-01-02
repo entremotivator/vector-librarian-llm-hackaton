@@ -1,99 +1,10 @@
 import json
 import pandas as pd
 import streamlit as st
-from trulens import tru  # Import TruLens library
-
 import client
 from authentication import openai_connection_status, weaviate_connection_status
 
-def retrieval_form_container(dr) -> None:
-    """Container to enter RAG query and send /rag_summary GET request"""
-    left, right = st.columns(2)
-    with left:
-        form = st.form(key="retrieval_query")
-        rag_query = form.text_area(
-            "Retrieval Query", value="What are the main challenges of deploying ML models?"
-        )
-
-    with right:
-        st.write("Hybrid Search Parameters")
-        retrieve_top_k = st.number_input(
-            "top K", value=3, help="The number of chunks to consider for response"
-        )
-        hybrid_search_alpha = st.slider(
-            "alpha",
-            min_value=0.0,
-            max_value=1.0,
-            value=0.75,
-            help="0: Keyword. 1: Vector.\n[Weaviate docs](https://weaviate.io/developers/weaviate/api/graphql/search-operators#hybrid)",
-        )
-
-        # Add TruLens parameters
-        trulens_threshold = st.slider(
-            "TruLens Threshold",
-            min_value=0.0,
-            max_value=1.0,
-            value=0.5,
-            help="TruLens similarity threshold for search results",
-        )
-
-    if form.form_submit_button("Search"):
-        with st.status("Running"):
-            # Add TruLens parameters to the function call
-            response = client.rag_summary(
-                dr=dr,
-                weaviate_client=st.session_state.get("WEAVIATE_CLIENT"),
-                rag_query=rag_query,
-                hybrid_search_alpha=hybrid_search_alpha,
-                retrieve_top_k=int(retrieve_top_k),
-                trulens_threshold=trulens_threshold,  # Pass the TruLens threshold
-            )
-        st.session_state["history"].append(dict(query=rag_query, response=response))
-
-def history_display_container(history):
-    if len(history) > 1:
-        st.header("History")
-        max_idx = len(history) - 1
-        history_idx = st.slider("History", 0, max_idx, value=max_idx, label_visibility="collapsed")
-        entry = history[history_idx]
-    else:
-        entry = history[0]
-
-    st.download_button(
-        "Download Q&A History",
-        data=json.dumps(history),
-        file_name="vector-librarian.json",
-        mime="application/json"
-    )
-
-    st.subheader("Query")
-    st.write(entry["query"])
-
-    st.subheader("Response")
-    st.write(entry["response"]["rag_summary"])
-
-    df = pd.DataFrame(entry["response"]["all_chunks"])
-    df = df.set_index("chunk_id")
-    df = df.rename(columns=dict(
-        score="Relevance",
-        chunk_index="Chunk Index",
-        document_file_name="File name",
-        content="Content",
-        summary="Summary"
-    ))
-
-    st.info("Double-click cell to read full content")
-    st.dataframe(
-        df,
-        hide_index=True,
-        use_container_width=True,
-        column_order=("Relevance", "Chunk Index", "File name", "Content", "Summary"),
-        column_config={col: st.column_config.Column(width="small") 
-                       for col in ("Relevance", "Chunk Index", "File name", "Content", "Summary")
-                      }
-    )
-
-def app() -> None:
+def main():
     st.set_page_config(
         page_title="📤 retrieval",
         page_icon="📚",
@@ -101,27 +12,41 @@ def app() -> None:
         menu_items={"Get help": None, "Report a bug": None},
     )
 
+    st.title("📤 Retrieval")
+
     with st.sidebar:
         openai_connection_status()
         weaviate_connection_status()
 
-    st.title("📤 Retrieval")
+    st.write("Hello! I'm your retrieval chatbot. How can I assist you today?")
 
-    if st.session_state.get("OPENAI_STATUS") != ("success", None):
-        st.warning("""
-            You need to provide an OpenAI API key.
-            Visit `Information` to connect.    
-        """)
+    openai_status = st.session_state.get("OPENAI_STATUS")
+    if openai_status != ("success", None):
+        st.warning("You need to provide an OpenAI API key. Visit `Information` to connect.")
         return
-    
+
     dr = client.instantiate_driver()
 
-    retrieval_form_container(dr)
+    # User Input
+    rag_query = st.text_area("Ask me something:", value="What are the main challenges of deploying ML models?")
+    retrieve_top_k = st.number_input("Top K", value=3, help="The number of chunks to consider for response")
+    hybrid_search_alpha = st.slider("Alpha", min_value=0.0, max_value=1.0, value=0.75,
+                                    help="[Weaviate docs](https://weaviate.io/developers/weaviate/api/graphql/search-operators#hybrid)")
 
-    if history := st.session_state.get("history"):
-        history_display_container(history)
-    else:
-        st.session_state["history"] = list()
+    # Chatbot Processing
+    if st.button("Search"):
+        response = client.rag_summary(
+            dr=dr,
+            weaviate_client=st.session_state.get("WEAVIATE_CLIENT"),
+            rag_query=rag_query,
+            hybrid_search_alpha=hybrid_search_alpha,
+            retrieve_top_k=int(retrieve_top_k),
+        )
+        st.session_state["history"].append(dict(query=rag_query, response=response))
+
+        # Display Results
+        st.header("Chatbot Response:")
+        st.write(response["rag_summary"])
 
 if __name__ == "__main__":
-    app()
+    main()
