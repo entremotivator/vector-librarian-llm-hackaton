@@ -34,6 +34,10 @@ def main():
     hybrid_search_alpha = st.slider("Search mode", min_value=0.0, max_value=1.0, value=0.75,
                                     help="[Weaviate docs](https://weaviate.io/developers/weaviate/api/graphql/search-operators#hybrid)")
 
+    # Upload PDF
+    st.header("Upload PDF Document:")
+    uploaded_file = st.file_uploader("Choose a PDF file", type="pdf")
+
     # Chatbot Processing
     if st.button("Search"):
         with st.spinner("Searching..."):
@@ -43,6 +47,7 @@ def main():
                 rag_query=rag_query,
                 hybrid_search_alpha=hybrid_search_alpha,
                 retrieve_top_k=int(retrieve_top_k),
+                pdf_content=uploaded_file.read() if uploaded_file else None,
             )
         st.session_state["history"].append(dict(query=rag_query, response=response))
 
@@ -62,12 +67,26 @@ def display_results(response):
     pass
 
 def download_history(history):
-    st.download_button(
-        "Download Q&A History",
-        data=json.dumps(history),
-        file_name="chatbot_history.json",
-        mime="application/json"
-    )
+    st.subheader("Chat History:")
+    if history:
+        df = pd.DataFrame(history)
+        st.dataframe(df, use_container_width=True)
+
+        # Download Button
+        st.subheader("Download Chat History:")
+        formats = ["CSV", "JSON"]
+        chosen_format = st.selectbox("Select Format:", formats)
+        download_button_label = f"Download as {chosen_format}"
+        download_filename = f"chatbot_history.{chosen_format.lower()}"
+        if st.button(download_button_label):
+            if chosen_format == "CSV":
+                csv_data = df.to_csv(index=False)
+                st.download_button(label=download_button_label, data=csv_data, file_name=download_filename, mime="text/csv")
+            elif chosen_format == "JSON":
+                json_data = df.to_json(orient="records", default_handler=str)
+                st.download_button(label=download_button_label, data=json_data, file_name=download_filename, mime="application/json")
+    else:
+        st.info("No chat history available.")
 
 if __name__ == "__main__":
     main()
